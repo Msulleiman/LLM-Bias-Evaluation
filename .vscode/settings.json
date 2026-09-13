@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.windows": {
+    "PATH": "C:\\Users\\Mariam Sulleiman\\AppData\\Local\\Python\\pythoncore-3.14-64\\Scripts;${env:PATH}"
+  },
+    "editor.fontWeight": "normal"
+}

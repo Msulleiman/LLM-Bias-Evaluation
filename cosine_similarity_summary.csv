@@ -1,0 +1,4 @@
+Comparison,count,mean,std,min,max
+gender_neutral vs man,105,0.1538,0.0768,0.0331,0.5266
+gender_neutral vs woman,105,0.157,0.0772,0.031,0.3784
+woman vs man,105,0.1532,0.0642,0.0262,0.3909

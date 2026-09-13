@@ -1,0 +1,6 @@
+,Cosine_Similarity,Cosine_Similarity,Cosine_Similarity,Cosine_Similarity,Cosine_Similarity
+,count,mean,std,min,max
+Comparison,,,,,
+gender_neutral vs man,126,0.2721,0.146,0.0398,1.0
+gender_neutral vs woman,126,0.2785,0.1447,0.0447,1.0
+woman vs man,126,0.2954,0.1585,0.0237,1.0

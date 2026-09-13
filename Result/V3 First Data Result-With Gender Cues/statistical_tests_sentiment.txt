@@ -1,0 +1,10 @@
+SENTIMENT SCORE STATISTICAL ANALYSIS
+======================================================================
+
+ANOVA F-statistic: 0.4385
+ANOVA p-value: 0.6453
+
+Gender Means:
+  gender_neutral: 0.1680
+  woman: 0.2329
+  man: 0.1827

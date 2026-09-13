@@ -1,0 +1,16 @@
+LLM,Gender,count,mean,std
+Claude,gender_neutral,210,0.2834,0.5873
+Claude,man,210,0.3107,0.562
+Claude,woman,210,0.283,0.5918
+Deepseek,gender_neutral,210,0.2449,0.6505
+Deepseek,man,210,0.2118,0.6547
+Deepseek,woman,210,0.2175,0.6623
+GPT,gender_neutral,210,0.3328,0.5413
+GPT,man,210,0.2754,0.5561
+GPT,woman,210,0.3393,0.5337
+Gemini,gender_neutral,210,0.1006,0.6578
+Gemini,man,210,0.0415,0.6591
+Gemini,woman,210,0.0295,0.6732
+Grok,gender_neutral,210,0.094,0.6147
+Grok,man,210,0.0762,0.5837
+Grok,woman,210,0.0796,0.5969

@@ -1,0 +1,7 @@
+COSINE SIMILARITY STATISTICAL ANALYSIS
+======================================================================
+
+Comparison Means:
+  gender_neutral vs woman: 0.2657
+  gender_neutral vs man: 0.2670
+  woman vs man: 0.2739

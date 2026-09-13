@@ -1,0 +1,276 @@
+---
+title: "LLM Statistical Analysis"
+output:
+  word_document: default
+  html_notebook: default
+authors: Ana Schauer
+---
+
+```{r}
+setwd("C:/Users/as237675/OneDrive - The University of Texas at Austin/Mariam/Statistical Analysis")
+#setwd("C:/Users/mariam/OneDrive - The University of Texas at Austin/Mariam/Statistical Analysis") # session -> set working directory -> choose working directory
+
+library(ggplot2)
+library(pastecs)
+library(nnet)
+library(psych)
+library(gmodels)
+library(dplyr)
+library(plyr)
+library(tidyr)
+library(car)
+library(reshape2)
+library(rstatix)
+library(datarium)
+library(checkmate)
+library(Hmisc)
+
+```
+ 
+```{r}
+# load data
+d.data = read.csv("SeverityData.csv", header=T)
+#d.data = d.data[-c(1), ]
+```
+
+# Format Variables
+```{r}
+d.data$Model = factor(d.data$Model)
+d.data$Gender = factor(d.data$Case)
+d.data$Severity = as.numeric(d.data$Severity)
+```
+
+```{r}
+mean(d.data$Severity)
+```
+
+# descriptive statistics and visualization by gender
+```{r}
+aggregate(Severity ~ Gender,
+  data = d.data,
+  function(x) round(c(mean = mean(x), sd = sd(x)), 2)
+)
+
+ggplot(d.data, aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+
+ggplot(d.data, aes(x=Case, y=Severity)) + geom_boxplot()
+
+```
+
+#these are the tests to see if you can run ANOVA (assumptions) - if your data fails either of these (p < 0.05) then you need to use a nonparametric alternative
+```{r}
+# run the anova
+
+res_aov <- aov(Severity ~ Gender, # dependent variable ~ independent variable
+  data = d.data)
+res_aov
+
+# normality visualization
+
+par(mfrow = c(1, 2)) # combine plots
+
+# histogram
+hist(res_aov$residuals)
+
+# QQ-plot
+library(car)
+qqPlot(res_aov$residuals,
+  id = FALSE # id = FALSE to remove point identification
+)
+
+# calculate normality
+shapiro.test(res_aov$residuals)
+
+# visualization of homogeneity of variances
+boxplot(Severity ~ Gender, data = d.data)
+
+# calculation of homogeneity of variances
+leveneTest(Severity ~ Gender, data = d.data)
+
+# if we pass both tests above (p > 0.05), run the ANOVA
+get_anova_table(res.aov)
+
+dunn_test(Severity ~ Gender, data = d.data)
+
+```
+
+#nonparametric test for severity ~ gender
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data) #p = 0.5065, so severity rating is not impacted by gender
+
+# Across all models, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 1.361, p = 0.507).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), we need to do a post-hoc test to see how groups actually differ from each other:
+
+dunn_test(Severity ~ Gender, data = d.data)
+```
+
+# descriptive statistics and visualization by model
+```{r}
+aggregate(Severity ~ Model,
+  data = d.data,
+  function(x) round(c(mean = mean(x), sd = sd(x)), 2)
+)
+
+ggplot(d.data, aes(x=Model, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+
+ggplot(d.data, aes(x=Model, y=Severity)) + geom_boxplot()
+
+```
+
+#these are the tests to see if you can run ANOVA (assumptions) - if your data fails either of these (p < 0.05) then you need to use a nonparametric alternative
+```{r}
+# run the anova
+
+res_aov <- aov(Severity ~ Model, # dependent variable ~ independent variable
+  data = d.data)
+res_aov
+
+# normality visualization
+
+par(mfrow = c(1, 2)) # combine plots
+
+# histogram
+hist(res_aov$residuals)
+
+# QQ-plot
+library(car)
+qqPlot(res_aov$residuals,
+  id = FALSE # id = FALSE to remove point identification
+)
+
+# calculate normality
+shapiro.test(res_aov$residuals)
+
+# visualization of homogeneity of variances
+boxplot(Severity ~ Model, data = d.data)
+
+# calculation of homogeneity of variances
+leveneTest(Severity ~ Model, data = d.data)
+```
+
+#nonparametric test for severity ~ model
+```{r}
+kruskal.test(Severity ~ Model, data = d.data) #p = 0.5065, so severity rating is not impacted by gender
+
+# The LLM model did not have a statistically significant impact on the assigned severity rating (chi_sq = 7.132, p = 0.211).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), we need to do a post-hoc test to see how groups actually differ from each other:
+
+dunn_test(Severity ~ Model, data = d.data) # pairwise comparisons
+
+# The LLM model did not have a statistically significant impact on the assigned severity rating (chi_sq = 7.132, p = 0.211).
+# Claude assigned statistically significantly lower severity ratings to pain points compared to DeepSeek (z = 1.973, p = 0.048), Gemini (z = 2.048, p = 0.041), and ChatGPT (z = 2.250, p = 0.024).
+```
+
+# overall graph
+```{r}
+ggplot(d.data, aes(x=Model, y=Severity, colour = Gender)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line", aes(group = Gender)) + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ labs(x ="Design Phase", y = "Price", colour = "Design Problem") + theme(text = element_text(size = 12)) + facet_grid(.~Gender)
+
+# ggplot(d.data, aes(x=Gender, y=Severity, colour = Model)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line", aes(group = Model)) + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ labs(x ="Design Phase", y = "Price", colour = "Design Problem") + theme(text = element_text(size = 12)) + facet_grid(.~Gender)
+
+```
+
+
+# does gender impact GPT severity?
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data[which(d.data$Model == "GPT"),]) #p = 0.5065, so severity rating is not impacted by gender
+
+# For ChatGPT, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 0.306, p = 0.858).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), (or just for fun) we need to do a post-hoc test to see how groups actually differ from each other:
+dunn_test(Severity ~ Gender, data = d.data[which(d.data$Model == "GPT"),])
+
+ggplot(d.data[which(d.data$Model == "GPT"),], aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+```
+
+# does gender impact Claude severity?
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data[which(d.data$Model == "Claude"),]) #p = 0.5065, so severity rating is not impacted by gender
+
+# For ChatGPT, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 0.306, p = 0.858).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), (or just for fun) we need to do a post-hoc test to see how groups actually differ from each other:
+dunn_test(Severity ~ Gender, data = d.data[which(d.data$Model == "Claude"),])
+
+ggplot(d.data[which(d.data$Model == "Claude"),], aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+```
+
+# does gender impact Copilot severity?
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data[which(d.data$Model == "Copilot"),]) #p = 0.5065, so severity rating is not impacted by gender
+
+# For ChatGPT, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 0.306, p = 0.858).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), (or just for fun) we need to do a post-hoc test to see how groups actually differ from each other:
+dunn_test(Severity ~ Gender, data = d.data[which(d.data$Model == "Copilot"),])
+
+ggplot(d.data[which(d.data$Model == "Copilot"),], aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+```
+
+# does gender impact Gemini severity?
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data[which(d.data$Model == "Gemini"),]) #p = 0.5065, so severity rating is not impacted by gender
+
+# For ChatGPT, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 0.306, p = 0.858).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), (or just for fun) we need to do a post-hoc test to see how groups actually differ from each other:
+dunn_test(Severity ~ Gender, data = d.data[which(d.data$Model == "Gemini"),])
+
+ggplot(d.data[which(d.data$Model == "Gemini"),], aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+```
+
+# does gender impact DeepSeek severity?
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data[which(d.data$Model == "DeepSeek"),]) #p = 0.5065, so severity rating is not impacted by gender
+
+# For ChatGPT, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 0.306, p = 0.858).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), (or just for fun) we need to do a post-hoc test to see how groups actually differ from each other:
+dunn_test(Severity ~ Gender, data = d.data[which(d.data$Model == "DeepSeek"),])
+
+ggplot(d.data[which(d.data$Model == "DeepSeek"),], aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+```
+
+# does gender impact Grok severity?
+```{r}
+kruskal.test(Severity ~ Gender, data = d.data[which(d.data$Model == "Grok"),]) #p = 0.5065, so severity rating is not impacted by gender
+
+# For ChatGPT, the gender of the user did not have a statistically significant impact on the assigned severity rating (chi_sq = 0.306, p = 0.858).
+
+# if the Kruskal-Wallis test is statistically significant (p < 0.05), (or just for fun) we need to do a post-hoc test to see how groups actually differ from each other:
+dunn_test(Severity ~ Gender, data = d.data[which(d.data$Model == "Grok"),])
+
+ggplot(d.data[which(d.data$Model == "Grok"),], aes(x=Gender, y=Severity)) + stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2) #+ theme(text = element_text(size = 12))
+```
+
+# chi square test to see if model or gender impacted how many pain points were recalled
+```{r}
+table(d.data$Model, d.data$Gender)
+
+ggplot(d.data) +  aes(x = Model, fill = Gender) + geom_bar()
+ggplot(d.data) +  aes(x = Model, fill = Gender) + geom_bar(position = "fill")
+
+#ggplot(d.data) +  aes(x = Gender, fill = Model) + geom_bar()
+
+chisq.test(table(d.data$Model, d.data$Gender))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

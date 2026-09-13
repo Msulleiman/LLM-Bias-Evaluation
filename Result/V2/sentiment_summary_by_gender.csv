@@ -1,0 +1,6 @@
+,cardiff_numerical,cardiff_numerical,cardiff_numerical,cardiff_numerical,cardiff_numerical
+,count,mean,std,min,max
+Gender,,,,,
+gender_neutral,137,0.1862,0.5534,-0.8854,0.9607
+man,136,0.2038,0.5546,-0.831,0.9574
+woman,137,0.2522,0.5962,-0.893,0.9642
